@@ -1,23 +1,26 @@
 module test11(); 
+
 parameter ADDRESS_BITS =24;
-parameter TAG_BITS=14 ;
-parameter WAYS=4;//2^WAYS 
-parameter INDEX_BITS=4 ;
+parameter TOTAL_BITS=ADDRESS_BITS+4;
+parameter TAG_BITS=12 ;
+parameter WAYS=3;//2^WAYS 
+parameter INDEX_BITS=6 ;
 //parameter SETS=2**INDEX_BITS;
 parameter OFFSET_BITS=6;
 parameter INPUT_SIZE=9075;
-reg [(ADDRESS_BITS-1):0]Address[(INPUT_SIZE-1):0];
+reg [(TOTAL_BITS-1):0]Address[(INPUT_SIZE-1):0];
 reg [(TAG_BITS-1):0]tag_array[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 reg valid[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 reg dirty[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 reg[(WAYS-1):0] lru[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 integer ui,uj,k,i,j,index,tag,replace;
-reg[39:0]HITS,MISSES;
+reg[39:0]HITS,MISSES,ReadHits,WriteHits,ReadMiss,WriteMiss;
 reg hit; 
 //inititalizing tag array and valid bits
 initial begin
 $readmemb("Addr_bin.txt",Address);  
 HITS=0;hit=0;
+ReadHits=0;WriteMiss=0;WriteHits=0;ReadMiss=0;
 MISSES=0;
 end
 initial 
@@ -46,10 +49,15 @@ begin
         end
         end
         lru[index][j]=0;
-        //dirty[index][k]=1'b0; //if write then it is set to zero indicating dirty for 
+        if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b10) //assuming 2 represents write operation
+            dirty[index][k]=1'b0; //if write then it is set to zero indicating dirty for 
        end
     end
     if(hit==1'b1)begin
+       if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b1)
+            ReadHits=ReadHits+1;
+        else
+            WriteHits=WriteHits+1;    
     end else begin //Miss
         replace=0;
         for(ui=0;ui<2**WAYS;ui=ui+1)begin
@@ -66,10 +74,16 @@ begin
         dirty[index][replace]=1'b1;
         hit=1'b0;
         MISSES=MISSES+1;
+       if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b1)
+            ReadMiss=ReadMiss+1;
+        else
+            WriteMiss=WriteMiss+1;  
     end
  end
 $display("Hitrate ",(100*HITS)/INPUT_SIZE);
-$display("The number of hits are ",HITS,"\nThe number of misses are ",MISSES);
+$display("The number of hits are: ",HITS,"\nThe number of misses are: ",MISSES);
+$display("The Read hits are: ",ReadHits,"\n The Read Misses are: ",ReadMiss);
+$display("The Write hits are: ",WriteHits,"\nThe Write Misses are: ",WriteMiss);
 end
 
 endmodule
