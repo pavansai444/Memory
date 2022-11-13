@@ -1,13 +1,14 @@
 module test11(); 
 
+parameter CACHE_SIZE=15;//in 2^CACHE_SIZE 
 parameter ADDRESS_BITS =24;
 parameter TOTAL_BITS=ADDRESS_BITS+4;
-parameter TAG_BITS=12 ;
-parameter WAYS=3;//2^WAYS 
-parameter INDEX_BITS=6 ;
+parameter TAG_BITS=ADDRESS_BITS-INDEX_BITS-OFFSET_BITS ;
+parameter WAYS=0;//2^WAYS 
+parameter INDEX_BITS=CACHE_SIZE-OFFSET_BITS-WAYS;
 //parameter SETS=2**INDEX_BITS;
 parameter OFFSET_BITS=6;
-parameter INPUT_SIZE=9075;
+parameter INPUT_SIZE=524;
 reg [(TOTAL_BITS-1):0]Address[(INPUT_SIZE-1):0];
 reg [(TAG_BITS-1):0]tag_array[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 reg valid[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
@@ -49,10 +50,10 @@ begin
         end
         end
         lru[index][j]=0;
-        if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b10) //assuming 2 represents write operation
-            dirty[index][k]=1'b0; //if write then it is set to zero indicating dirty for 
        end
     end
+    if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b10) //assuming 2 represents write operation
+            dirty[index][k]=1'b0; //if write then it is set to zero indicating dirty for 
     if(hit==1'b1)begin
        if(Address[i][(TOTAL_BITS-1):(TOTAL_BITS-4)]==4'b1)
             ReadHits=ReadHits+1;
@@ -64,8 +65,9 @@ begin
             if(lru[index][ui]>lru[index][replace])begin
             replace=ui; end
         end
+        valid[index][replace]=1'b0;
         tag_array[index][replace]=tag;
-        valid[index][replace]=1'b1;
+        valid[index][replace]=1'b1;//on receiving block from memory
         for(j=0;j<2**WAYS;j=j+1)begin
             if(lru[index][j]<lru[index][replace])
                 lru[index][j]=lru[index][j]+1;    
@@ -82,7 +84,7 @@ begin
  end
 $display("Hitrate ",(100*HITS)/INPUT_SIZE);
 $display("The number of hits are: ",HITS,"\nThe number of misses are: ",MISSES);
-$display("The Read hits are: ",ReadHits,"\n The Read Misses are: ",ReadMiss);
+$display("The Read hits are: ",ReadHits,"\nThe Read Misses are: ",ReadMiss);
 $display("The Write hits are: ",WriteHits,"\nThe Write Misses are: ",WriteMiss);
 end
 
