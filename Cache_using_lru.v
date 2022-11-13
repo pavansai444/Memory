@@ -1,14 +1,14 @@
-module test11(); 
+module cache(); 
 
-parameter CACHE_SIZE=15;//in 2^CACHE_SIZE 
+parameter CACHE_SIZE=14;//in 2^CACHE_SIZE 
 parameter ADDRESS_BITS =24;
 parameter TOTAL_BITS=ADDRESS_BITS+4;
-parameter TAG_BITS=ADDRESS_BITS-INDEX_BITS-OFFSET_BITS ;
-parameter WAYS=0;//2^WAYS 
+parameter WAYS=4;//2^WAYS 
 parameter INDEX_BITS=CACHE_SIZE-OFFSET_BITS-WAYS;
+parameter TAG_BITS=ADDRESS_BITS-INDEX_BITS-OFFSET_BITS ;
 //parameter SETS=2**INDEX_BITS;
 parameter OFFSET_BITS=6;
-parameter INPUT_SIZE=524;
+parameter INPUT_SIZE=9075;
 reg [(TOTAL_BITS-1):0]Address[(INPUT_SIZE-1):0];
 reg [(TAG_BITS-1):0]tag_array[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
 reg valid[2**(INDEX_BITS)-1:0][2**(WAYS)-1:0];
